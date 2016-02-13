@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from lib import TestrunnerUtils, RokuUtils
+from utils import TestrunnerUtils, RokuUtils
 
 import sys
 import getopt
