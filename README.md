@@ -1,11 +1,11 @@
-# roku-testrunner
+# roku-brstestrunner
 A testrunner for automatically running a Roku unit test package using
 [brstest](https://github.com/MarkRoddy/brstest), and outputting a JUnit-compatible test report.
 
 It is assumed that a brstest package is already installed on the target Roku device.
 
 ### Usage
-`python testrunner.py --ip <device ip> [--verbose] [--help]`
+`python brstestrunner.py --ip <device ip> [--verbose] [--help]`
 
 The testrunner utilises a Telnet connection to the target Roku device. As only one Telnet connection at a time is
 allowed on a Roku device, you must remember to disconnect any existing Telnet connection (such as a debugger session)
