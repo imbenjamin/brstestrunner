@@ -1,21 +1,24 @@
 #!/usr/bin/python
 
-from utils import TestrunnerUtils, RokuUtils
-
-import sys
 import getopt
 import ipaddress
-import time
-import socket
+import os.path as path
 import re
+import socket
+import sys
+import time
+
+from utils import TestrunnerUtils, RokuUtils
 
 verbose_mode = False
 roku_ip = ""
+out_dir = "./"
+out_name = "report"
 
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "i:hv", ["ip=", "help", "verbose"])
+        opts, args = getopt.getopt(argv, "i:d:n:hv", ["ip=", "outdir=" "help", "verbose"])
     except getopt.GetoptError:
         print_usage()
         sys.exit(2)
@@ -28,17 +31,30 @@ def main(argv):
             global verbose_mode
             verbose_mode = True
         elif opt in ("-i", "--ip"):
-            global roku_ip
-            roku_ip = arg
+            try:
+                ipaddress.ip_address(arg)
+            except ValueError as err:
+                verbose_print("    Exception thrown: "+str(err))
+                TestrunnerUtils.pretty_print("ERROR: The IP Address given is not valid!",
+                                             TestrunnerUtils.TextDecorations.FAIL)
+                sys.exit(2)
+            else:
+                global roku_ip
+                roku_ip = arg
+        elif opt in ("-o", "--outdir"):
+            if path.isdir(arg):
+                global out_dir
+                out_dir = arg
+            else:
+                TestrunnerUtils.pretty_print("ERROR: The output directory given is not valid!",
+                                             TestrunnerUtils.TextDecorations.FAIL)
+
+    if roku_ip == "":
+        TestrunnerUtils.pretty_print("ERROR: Missing required arguments", TestrunnerUtils.TextDecorations.FAIL)
+        print_usage()
+        sys.exit(2)
 
     print_welcome()
-
-    # Check to see if IP is valid
-    try:
-        ipaddress.ip_address(roku_ip)
-    except ValueError as err:
-        print(err)
-        sys.exit(2)
 
     # If dev channel is installed, start testing
     TestrunnerUtils.pretty_print("Checking that a dev channel app is installed...",
@@ -87,43 +103,35 @@ def start_testing():
     verbose_print("        Connected to remote host.")
     verbose_print("    Reading Telnet output, please wait...")
 
-    job_running = True
-    test_pass = ["...........................................................................................................................................................................................................\r\n----------------------------------------------------------------------\r\nRan 1228 tests\r\n\r\nOK\r\n\r\n###################################################\r\n                Test suite complete                \r\n###################################################\r\nNote: GC - Found 936 orphaned objects (objects in a circular ref loop).\r\n\r\n------ Running dev 'NOW TV' main ------\r\n###################################################\r\n                Running unit tests!                \r\n###################################################\r\n............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................\r\n----------------------------------------------------------------------\r\nRan 1228 tests\r\n\r\nOK\r\n\r\n###################################################\r\n                Test suite complete                \r\n###################################################\r\nNote: GC - Found 936 orphaned objects (objects in a circular ref loop).\r\n\r\n------ Running dev 'NOW TV' main ------\r\n###################################################\r\n                Running unit tests!                \r\n###################################################\r\n............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................\r\n----------------------------------------------------------------------\r\nRan 1228 tests\r\n\r\nOK\r\n\r\n###################################################\r\n                Test suite complete                \r\n###################################################\r\nNote: GC - Found 936 orphaned objects (objects in a circular ref loop).\r\n\r\n------ Running dev 'NOW TV' main ------\r\n", '###################################################\r\n', '                Running unit tests!                \r\n###################################################\r\n', '......................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................', '......................................................................................................................................................................................................................................................................................................................................................................................\r\n----------------------------------------------------------------------\r\nRan 1228 tests\r\n\r\nOK\r\n\r\n###################################################\r\n                Test suite complete                \r\n###################################################\r\n', 'Note: GC - Found 936 orphaned objects (objects in a circular ref loop).\r\n']
-    test_fail = ["----\r\nRan 1228 tests\r\n\r\nOK\r\n\r\n###################################################\r\n                Test suite complete                \r\n###################################################\r\nNote: GC - Found 936 orphaned objects (objects in a circular ref loop).\r\n\r\n------ Running dev 'NOW TV' main ------\r\n###################################################\r\n                Running unit tests!                \r\n###################################################\r\n............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................\r\n----------------------------------------------------------------------\r\nRan 1228 tests\r\n\r\nOK\r\n\r\n###################################################\r\n                Test suite complete                ", "\r\n###################################################\r\nNote: GC - Found 936 orphaned objects (objects in a circular ref loop).\r\n\r\n------ Running dev 'NOW TV' main ------\r\n###################################################\r\n                Running unit tests!                \r\n###################################################\r\nF............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................\r\n======================================================================\r\npkg:/source/data/testAbstractContentData.brs\r\nFAIL: testAssertFalseIsTrue\r\n----------------------------------------------------------------------\r\nexpression evaluates to false\r\n\r\n----------------------------------------------------------------------\r\nRan 1229 tests\r\n\r\nFAILED (failures= 1)\r\n\r\n###################################################\r\n                Test suite complete                \r\n###################################################\r\nNote: GC - Found 936 orphaned objects (objects in a circular ref loop).\r\n\r\n------ Running dev 'NOW TV' main ------\r\n", '###################################################\r\n', '                Running unit tests!                \r\n###################################################\r\n', 'F............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................\r\n', '======================================================================\r\npkg:/source/data/testAbstractContentData.brs\r\nFAIL: testAssertFalseIsTrue\r\n----------------------------------------------------------------------\r\nexpression evaluates to false\r\n\r\n----------------------------------------------------------------------\r\nRan 1229 tests\r\n\r\nFAILED (failures= 1)\r\n\r\n###################################################\r\n                Test suite complete                \r\n###################################################\r\n', 'Note: GC - Found 936 orphaned objects (objects in a circular ref loop).\r\n']
-    test_multifail_error = ['.........................................................................', "...................................................................................................................................................................................................................................\r\n======================================================================\r\npkg:/source/data/testAbstractContentData.brs\r\nERROR: testDeliberateError\r\n----------------------------------------------------------------------\r\nMember function not found in BrightScript Component or interface (ERR_RO2)\r\n\r\n======================================================================\r\npkg:/source/data/testAbstractContentData.brs\r\nFAIL: testAssertFalseIsTrue\r\n----------------------------------------------------------------------\r\nexpression evaluates to false\r\n\r\n======================================================================\r\npkg:/source/data/testAbstractContentData.brs\r\nFAIL: testAssertFalseIsTrue2\r\n----------------------------------------------------------------------\r\nexpression evaluates to false\r\n\r\n----------------------------------------------------------------------\r\nRan 1231 tests\r\n\r\nFAILED (failures= 2, errors= 1)\r\n\r\n###################################################\r\n                Test suite complete                \r\n###################################################\r\nNote: GC - Found 936 orphaned objects (objects in a circular ref loop).\r\n\r\n------ Running dev 'NOW TV' main ------\r\n##############################", '#####################\r\n                Running unit tests!                \r\n###################################################\r\nFFE............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................\r\n======================================================================\r\npkg:/source/data/testAbstr', "actContentData.brs\r\nERROR: testDeliberateError\r\n----------------------------------------------------------------------\r\nMember function not found in BrightScript Component or interface (ERR_RO2)\r\n\r\n======================================================================\r\npkg:/source/data/testAbstractContentData.brs\r\nFAIL: testAssertFalseIsTrue\r\n----------------------------------------------------------------------\r\nexpression evaluates to false\r\n\r\n======================================================================\r\npkg:/source/data/testAbstractContentData.brs\r\nFAIL: testAssertFalseIsTrue2\r\n----------------------------------------------------------------------\r\nexpression evaluates to false\r\n\r\n----------------------------------------------------------------------\r\nRan 1231 tests\r\n\r\nFAILED (failures= 2, errors= 1)\r\n\r\n###################################################\r\n                Test suite complete                \r\n###################################################\r\nNote: GC - Found 936 orphaned objects (objects in a circular ref loop).\r\n\r\n------ Running dev 'NOW TV' main ------\r\n", '###################################################\r\n', '                Running unit tests!                \r\n###################################################\r\n', 'FFE............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................\r\n', '======================================================================\r\npkg:/source/data/testAbstractContentData.brs\r\nERROR: testDeliberateError\r\n----------------------------------------------------------------------\r\nMember function not found in BrightScript Component or interface (ERR_RO2)\r\n\r\n======================================================================\r\npkg:/source/data/testAbstractContentData.brs\r\nFAIL: testAssertFalseIsTrue\r\n----------------------------------------------------------------------\r\nexpression evaluates to false\r\n\r\n======================================================================\r\npkg:/source/data/testAbstractContentData.brs\r\nFAIL: testAssertFalseIsTrue2\r\n----------------------------------------------------------------------\r\nexpression evaluates to false\r\n\r\n----------------------------------------------------------------------\r\nRan 1231 tests\r\n\r\nFAILED (failures= 2, errors= 1)\r\n\r\n###################################################\r\n                Test suite complete                \r\n###################################################\r\n', 'Note: GC - Found 936 orphaned objects (objects in a circular ref loop).\r\n']
+    receiving_output = True
 
-    # telnet_output = test_pass
-    telnet_output = test_multifail_error
-
-    # telnet_output = []
-    # while job_running:
-    #     try:
-    #         # Receive data from the socket
-    #         data = s.recv(4096)
-    #         if not data:
-    #             # Host has terminated the connection
-    #             TestrunnerUtils.pretty_print("ERROR: The connection was prematurely terminated by the host.",
-    #                                          TestrunnerUtils.TextDecorations.FAIL)
-    #             sys.exit(1)
-    #         else:
-    #             # Store the line
-    #             telnet_output.append(data.decode())
-    #     except socket.timeout:
-    #         # Socket has timed out, no more Telnet output is being received
-    #         verbose_print("    No more Telnet output to read.")
-    #         job_running = False
-    #     except ConnectionError as err:
-    #         # Some other ConnectionError has occurred
-    #         verbose_print("    Exception thrown: "+err.strerror)
-    #         TestrunnerUtils.pretty_print("ERROR: There was a problem with the connection.",
-    #                                      TestrunnerUtils.TextDecorations.FAIL)
-    #         job_running = False
+    telnet_output = []
+    while receiving_output:
+        try:
+            # Receive data from the socket
+            data = s.recv(4096)
+            if not data:
+                # Host has terminated the connection
+                TestrunnerUtils.pretty_print("ERROR: The connection was prematurely terminated by the host.",
+                                             TestrunnerUtils.TextDecorations.FAIL)
+                sys.exit(1)
+            else:
+                # Store the line
+                telnet_output.append(data.decode())
+        except socket.timeout:
+            # Socket has timed out, no more Telnet output is being received
+            verbose_print("    No more Telnet output to read.")
+            receiving_output = False
+        except ConnectionError as err:
+            # Some other ConnectionError has occurred
+            verbose_print("    Exception thrown: "+err.strerror)
+            TestrunnerUtils.pretty_print("ERROR: There was a problem with the connection.",
+                                         TestrunnerUtils.TextDecorations.FAIL)
+            receiving_output = False
 
     verbose_print("    Closing connection...")
     s.shutdown(socket.SHUT_RDWR)
     s.close()
-
-    # print(telnet_output)
 
     verbose_print("    Parsing Telnet output...")
     clean_telnet = TestrunnerUtils.clean_raw_telnet(telnet_output)
@@ -134,14 +142,19 @@ def start_testing():
     if len(test_start_idx) > 0:
         last_result = clean_telnet[:test_start_idx[0]+1]
         last_result.reverse()
-        print(last_result)
     else:
         TestrunnerUtils.pretty_print("ERROR: Cannot find any test results!",
                                      TestrunnerUtils.TextDecorations.FAIL)
         sys.exit(1)
 
     # Determine results of test suite
-    result_chars = last_result[2]
+    try:
+        result_chars = last_result[2]
+    except IndexError as err:
+        verbose_print("    Exception thrown: "+str(err))
+        TestrunnerUtils.pretty_print("ERROR: Cannot find any test results!",
+                                     TestrunnerUtils.TextDecorations.FAIL)
+        sys.exit(1)
 
     num_of_tests = len(result_chars)
     num_of_fails = result_chars.count('F')
@@ -171,37 +184,54 @@ def start_testing():
             TestrunnerUtils.pretty_print("Details of failures:", TestrunnerUtils.TextDecorations.HEADER)
             failures_idx = [i for i, item in enumerate(last_result) if re.search('FAIL:.*', item)]
             for failure_index in failures_idx:
-                file = last_result[failure_index-1]
-                function_name = re.match('FAIL: (?P<name>\S*).*', last_result[failure_index]).group('name')
-                reason = last_result[failure_index+2]
+                suite = path.basename(path.splitext(last_result[failure_index-1])[0])
+                case = re.match('FAIL: (?P<name>\S*).*', last_result[failure_index]).group('name')
+                message = last_result[failure_index+2]
 
-                if file not in failure_dict:
-                    failure_dict[file] = {}
-                failure_dict[file][function_name] = reason
+                if suite not in failure_dict:
+                    failure_dict[suite] = {}
+                failure_dict[suite][case] = message
 
-            for file in failure_dict:
-                print("    " + file + ":")
-                for function_name in failure_dict[file]:
-                    print("        " + function_name + ":")
-                    print("            " + failure_dict[file][function_name])
+            for suite in failure_dict:
+                print("    " + suite + ":")
+                for case in failure_dict[suite]:
+                    print("        " + case + ":")
+                    print("            " + failure_dict[suite][case])
 
         if num_of_errors > 0:
             TestrunnerUtils.pretty_print("Details of errors:", TestrunnerUtils.TextDecorations.HEADER)
             errors_idx = [i for i, item in enumerate(last_result) if re.search('ERROR:.*', item)]
             for error_index in errors_idx:
-                file = last_result[error_index-1]
-                function_name = re.match('ERROR: (?P<name>\S*).*', last_result[error_index]).group('name')
-                reason = last_result[error_index+2]
+                suite = path.basename(path.splitext(last_result[error_index-1])[0])
+                case = re.match('ERROR: (?P<name>\S*).*', last_result[error_index]).group('name')
+                message = last_result[error_index+2]
 
-                if file not in error_dict:
-                    error_dict[file] = {}
-                error_dict[file][function_name] = reason
+                if suite not in error_dict:
+                    error_dict[suite] = {}
+                error_dict[suite][case] = message
 
-            for file in error_dict:
-                print("    " + file + ":")
-                for function_name in error_dict[file]:
-                    print("        " + function_name + ":")
-                    print("            " + error_dict[file][function_name])
+            for suite in error_dict:
+                print("    " + suite + ":")
+                for case in error_dict[suite]:
+                    print("        " + case + ":")
+                    print("            " + error_dict[suite][case])
+
+    # Publish XML report
+    TestrunnerUtils.pretty_print("Publishing XML report...", TestrunnerUtils.TextDecorations.HEADER)
+    tree = TestrunnerUtils.create_junit_xml(num_of_tests, num_of_passes, num_of_fails, num_of_errors,
+                                            failure_dict, error_dict)
+    try:
+        output_file = path.abspath(out_dir) + "\\" + out_name + ".xml"
+        verbose_print("    Writing to " + output_file)
+        tree.write(output_file, encoding="UTF-8", xml_declaration=True)
+    except Exception as err:
+        verbose_print("    Exception thrown: "+str(err))
+        TestrunnerUtils.pretty_print("ERROR: Unable to write the test report XML file!",
+                                     TestrunnerUtils.TextDecorations.FAIL)
+        sys.exit(1)
+    else:
+        TestrunnerUtils.pretty_print("Testing complete!", TestrunnerUtils.TextDecorations.OK_BLUE)
+        sys.exit(0)
 
 
 def print_welcome():
@@ -215,11 +245,13 @@ def print_welcome():
 
 
 def print_usage():
-    print("""usage: " + sys.argv[0] + " --ip i [--verbose]
+    print("""usage: """ + sys.argv[0] + """ --ip i [--outdir d] [--outname n] [--verbose]
     --ip i  IP address of the Roku device to test with
+    --outdir d The directory to write the XML report to (Default is the current directory)
+    --outname n The file name to use for the XML report (Default is 'report', produces report.xml)
     --verbose  Show more descriptive logging
 
-    Example: " + sys.argv[0] + " --ip 192.168.1.78 --verbose""")
+    Example: """ + sys.argv[0] + """ --ip 192.168.1.78 --verbose""")
 
 
 def verbose_print(string, colour="", decoration=""):

@@ -1,10 +1,14 @@
 #!/usr/bin/python
 
-import requests
 import xml.etree.ElementTree as ElementTree
+
+import requests
 
 
 class RokuUtils:
+    """Utilites for Roku devices
+    :param ip: The IP address of the Roku device to use
+    """
     device_ip = ""
     ecp_address = ""
 
@@ -13,9 +17,15 @@ class RokuUtils:
         self.ecp_address = "http://"+ip+":8060/"
 
     def keypress(self, key):
+        """Commands a key press
+        :param key: A valid key name
+        """
         requests.post(self.ecp_address+"keypress/"+key)
 
     def is_dev_installed(self) -> bool:
+        """Checks if there is a 'dev' channel installed on the Roku device
+        :return: Boolean result
+        """
         result = False
         r = requests.get(self.ecp_address+"query/apps")
         xml_root = ElementTree.fromstring(r.text)
@@ -26,4 +36,6 @@ class RokuUtils:
         return result
 
     def launch_dev_channel(self):
+        """Commands that the 'dev' channel is launched
+        """
         requests.post(self.ecp_address+"launch/dev")

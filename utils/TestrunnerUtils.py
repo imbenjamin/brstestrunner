@@ -1,8 +1,56 @@
 #!/usr/bin/python
 
 
+import xml.etree.ElementTree as ElementTree
+
+
+def create_junit_xml(num_of_tests, num_of_passes, num_of_fails, num_of_errors, failure_dict, error_dict):
+    """Generate an ElementTree of a test report
+
+    :param num_of_tests: Total number of tests
+    :param num_of_passes: Number of passing tests
+    :param num_of_fails: Number of failing tests
+    :param num_of_errors: Number of erroneous tests
+    :param failure_dict: Dictionary of failing tests
+    :param error_dict: Dictionary of erroneous tests
+    :return: ElementTree of the test report
+    """
+    # Create root element
+    root = ElementTree.Element("testsuites", {"tests": str(num_of_tests), "failures": str(num_of_fails),
+                                              "errors": str(num_of_errors)})
+
+    # Create passing (fake) tests
+    passing_suite = ElementTree.SubElement(root, "testsuite", {"name": "passing tests", "tests": str(num_of_passes)})
+    for i in range(num_of_passes):
+        ElementTree.SubElement(passing_suite, "testcase", {"name": "passing test #"+str(i+1)})
+
+    # Create failing tests
+    for suite in failure_dict:
+        count = str(len(failure_dict[suite]))
+        suite_element = ElementTree.SubElement(root, "testsuite", {"name": suite, "tests": count, "failures": count})
+        for case in failure_dict[suite]:
+            case_element = ElementTree.SubElement(suite_element, "testcase", {"name": case, "classname": suite})
+            ElementTree.SubElement(case_element, "failure", {"message": failure_dict[suite][case]})
+
+    # Create erroneous tests
+    for suite in error_dict:
+        count = str(len(error_dict[suite]))
+        suite_element = ElementTree.SubElement(root, "testsuite", {"name": suite, "tests": count, "errors": count})
+        for case in error_dict[suite]:
+            case_element = ElementTree.SubElement(suite_element, "testcase", {"name": case, "classname": suite})
+            ElementTree.SubElement(case_element, "error", {"message": error_dict[suite][case]})
+
+    # Create tree
+    tree = ElementTree.ElementTree(root)
+    return tree
+
+
 def clean_raw_telnet(telnet_output):
-    # Recreate output based on newline symbols, removing blank lines
+    """Clean raw telnet output from a brstest session
+
+    :param telnet_output: List of raw (decoded) telnet lines
+    :return: List of cleaned output lines, with empty lines removed
+    """
     split_str = "".join(telnet_output).split("\r\n")
     while split_str.count("") > 0:
         split_str.remove("")
@@ -10,6 +58,11 @@ def clean_raw_telnet(telnet_output):
 
 
 def pretty_print(string, colour="", decoration=""):
+    """Print pretty text to the console
+    :param string: String to print
+    :param colour: ANSI colour code to apply
+    :param decoration: ANSI decoration code to apply
+    """
     s = ""
     if decoration != "":
         s += decoration
@@ -22,6 +75,8 @@ def pretty_print(string, colour="", decoration=""):
 
 
 class TextDecorations:
+    """Constants for ANSI decoration codes
+    """
     HEADER = '\033[95m'
     OK_BLUE = '\033[94m'
     OK_GREEN = '\033[92m'
