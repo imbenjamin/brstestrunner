@@ -2,17 +2,20 @@
 A testrunner for automatically running a Roku unit test package using
 [brstest](https://github.com/MarkRoddy/brstest), and outputting a JUnit-compatible test report.
 
-It is assumed that a brstest package is already installed on the target Roku device.
+### Prerequisites
+* Python 2.7 environment (written for 2.7.11)
+* The brstest package must be installed on the target Roku device before running the script.
+* At present the script looks for the string "Running unit tests!" to mark the beginning of a brstest session. You will
+need to add `print "Running unit tests!"` before you call `BrsTestMain()` in your BrightScript test app. Surrounding
+text is allowed. Eg: `print "*** Running unit tests! ***"`. Extra print statements after running `BrsTestMain()` is allowed.
 
 ### Usage
-`python brstestrunner.py --ip <device ip> [--verbose] [--help]`
+`python brstestrunner.py --ip <device ip> [--outdir <output directory>] [--outname n <output file name>] [--verbose]
+[--help]`
 
 The testrunner utilises a Telnet connection to the target Roku device. As only one Telnet connection at a time is
 allowed on a Roku device, you must remember to disconnect any existing Telnet connection (such as a debugger session)
 before running the testrunner.
-
-### Prerequisites
-* Python 3 (written for 3.5.1)
 
 ### What does the script actually do?
 1. Checks that the IP address given as a valid IP address

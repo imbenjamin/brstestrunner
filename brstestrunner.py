@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import getopt
-import ipaddress
 import os.path as path
 import re
 import socket
@@ -32,8 +31,8 @@ def main(argv):
             verbose_mode = True
         elif opt in ("-i", "--ip"):
             try:
-                ipaddress.ip_address(arg)
-            except ValueError as err:
+                socket.inet_aton(arg)
+            except socket.error as err:
                 verbose_print("    Exception thrown: "+str(err))
                 TestrunnerUtils.pretty_print("ERROR: The IP Address given is not valid!",
                                              TestrunnerUtils.TextDecorations.FAIL)
@@ -122,9 +121,9 @@ def start_testing():
             # Socket has timed out, no more Telnet output is being received
             verbose_print("    No more Telnet output to read.")
             receiving_output = False
-        except ConnectionError as err:
+        except Exception as err:
             # Some other ConnectionError has occurred
-            verbose_print("    Exception thrown: "+err.strerror)
+            verbose_print("    Exception thrown: "+str(err))
             TestrunnerUtils.pretty_print("ERROR: There was a problem with the connection.",
                                          TestrunnerUtils.TextDecorations.FAIL)
             receiving_output = False
