@@ -1,12 +1,13 @@
 from __future__ import absolute_import
-
 import errno
-import hmac
 import warnings
+import hmac
+
 from binascii import hexlify, unhexlify
 from hashlib import md5, sha1, sha256
 
 from ..exceptions import SSLError, InsecurePlatformWarning, SNIMissingWarning
+
 
 SSLContext = None
 HAS_SNI = False

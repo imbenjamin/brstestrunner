@@ -14,7 +14,9 @@ import codecs
 import collections
 import io
 import os
+import platform
 import re
+import sys
 import socket
 import struct
 import warnings
@@ -26,8 +28,8 @@ from .compat import (quote, urlparse, bytes, str, OrderedDict, unquote, is_py2,
                      builtin_str, getproxies, proxy_bypass, urlunparse,
                      basestring)
 from .cookies import RequestsCookieJar, cookiejar_from_dict
-from .exceptions import InvalidURL, FileModeWarning
 from .structures import CaseInsensitiveDict
+from .exceptions import InvalidURL, FileModeWarning
 
 _hush_pyflakes = (RequestsCookieJar,)
 

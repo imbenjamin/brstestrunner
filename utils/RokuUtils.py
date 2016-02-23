@@ -29,7 +29,7 @@ class RokuUtils:
         result = False
         r = requests.get(self.ecp_address + "query/apps")
         xml_root = ElementTree.fromstring(r.text)
-        for app in xml_root.iter("app"):
+        for app in xml_root.getiterator("app"):
             if app.get("id") == "dev":
                 result = True
                 break

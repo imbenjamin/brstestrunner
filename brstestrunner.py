@@ -222,7 +222,7 @@ def start_testing():
     try:
         output_file = path.abspath(out_dir) + "\\" + out_name + ".xml"
         verbose_print("    Writing to " + output_file)
-        tree.write(output_file, encoding="UTF-8", xml_declaration=True)
+        tree.write(output_file, encoding="UTF-8")
     except Exception as err:
         verbose_print("    Exception thrown: "+str(err))
         TestrunnerUtils.pretty_print("ERROR: Unable to write the test report XML file!",
