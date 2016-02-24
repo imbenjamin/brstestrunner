@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import getopt
+import os
 import os.path as path
 import re
 import socket
@@ -192,10 +193,10 @@ def start_testing():
                 failure_dict[suite][case] = message
 
             for suite in failure_dict:
-                print("    " + suite + ":")
+                TestrunnerUtils.printout("    " + suite + ":")
                 for case in failure_dict[suite]:
-                    print("        " + case + ":")
-                    print("            " + failure_dict[suite][case])
+                    TestrunnerUtils.printout("        " + case + ":")
+                    TestrunnerUtils.printout("            " + failure_dict[suite][case])
 
         if num_of_errors > 0:
             TestrunnerUtils.pretty_print("Details of errors:", TestrunnerUtils.TextDecorations.HEADER)
@@ -210,17 +211,17 @@ def start_testing():
                 error_dict[suite][case] = message
 
             for suite in error_dict:
-                print("    " + suite + ":")
+                TestrunnerUtils.printout("    " + suite + ":")
                 for case in error_dict[suite]:
-                    print("        " + case + ":")
-                    print("            " + error_dict[suite][case])
+                    TestrunnerUtils.printout("        " + case + ":")
+                    TestrunnerUtils.printout("            " + error_dict[suite][case])
 
     # Publish XML report
     TestrunnerUtils.pretty_print("Publishing XML report...", TestrunnerUtils.TextDecorations.HEADER)
     tree = TestrunnerUtils.create_junit_xml(num_of_tests, num_of_passes, num_of_fails, num_of_errors,
                                             failure_dict, error_dict)
     try:
-        output_file = path.abspath(out_dir) + "\\" + out_name + ".xml"
+        output_file = path.join(path.abspath(out_dir), out_name + ".xml")
         verbose_print("    Writing to " + output_file)
         tree.write(output_file, encoding="UTF-8")
     except Exception as err:
@@ -234,17 +235,17 @@ def start_testing():
 
 
 def print_welcome():
-    print("""
+    TestrunnerUtils.printout("""
     ***********************
     ***  brstestrunner  ***
     ***********************
     """)
 
-    verbose_print("Verbose Mode is ON\n", TestrunnerUtils.TextDecorations.WARNING)
+    verbose_print("Verbose Mode is ON"+os.linesep, TestrunnerUtils.TextDecorations.WARNING)
 
 
 def print_usage():
-    print("""usage: """ + sys.argv[0] + """ --ip i [--outdir d] [--outname n] [--verbose]
+    TestrunnerUtils.printout("""usage: """ + sys.argv[0] + """ --ip i [--outdir d] [--outname n] [--verbose]
     --ip i  IP address of the Roku device to test with
     --outdir d The directory to write the XML report to (Default is the current directory)
     --outname n The file name to use for the XML report (Default is 'report', produces report.xml)

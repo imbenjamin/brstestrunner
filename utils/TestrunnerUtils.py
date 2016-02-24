@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 
+import sys
+import os
 import xml.etree.ElementTree as ElementTree
 
 
@@ -71,7 +73,14 @@ def pretty_print(string, colour="", decoration=""):
     s += string
     if colour != "" or decoration != "":
         s += TextDecorations.END_DECORATION
-    print(s)
+    printout(s)
+
+
+def printout(string):
+    """Write to stdout with line seperator
+    :param string: String to print
+    """
+    sys.stdout.write(string + os.linesep)
 
 
 class TextDecorations:
