@@ -86,11 +86,11 @@ def printout(string):
 class TextDecorations:
     """Constants for ANSI decoration codes
     """
-    HEADER = '\033[95m'
-    OK_BLUE = '\033[94m'
-    OK_GREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
+    HEADER = '\033[35m'
+    OK_BLUE = '\033[34m'
+    OK_GREEN = '\033[32m'
+    WARNING = '\033[33m'
+    FAIL = '\033[31m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
     END_DECORATION = '\033[0m'
