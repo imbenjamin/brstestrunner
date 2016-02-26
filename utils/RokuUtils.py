@@ -1,8 +1,7 @@
 #!/usr/bin/python
 
 import xml.etree.ElementTree as ElementTree
-
-from utils import requests
+import urllib2
 
 
 class RokuUtils:
@@ -20,15 +19,15 @@ class RokuUtils:
         """Commands a key press
         :param key: A valid key name
         """
-        requests.post(self.ecp_address + "keypress/" + key)
+        urllib2.urlopen(self.ecp_address + "keypress/" + key, "").read()
 
     def is_dev_installed(self):
         """Checks if there is a 'dev' channel installed on the Roku device
         :return: Boolean result
         """
         result = False
-        r = requests.get(self.ecp_address + "query/apps")
-        xml_root = ElementTree.fromstring(r.text)
+        r = urllib2.urlopen(self.ecp_address + "query/apps").read()
+        xml_root = ElementTree.fromstring(r)
         for app in xml_root.getiterator("app"):
             if app.get("id") == "dev":
                 result = True
@@ -38,4 +37,4 @@ class RokuUtils:
     def launch_dev_channel(self):
         """Commands that the 'dev' channel is launched
         """
-        requests.post(self.ecp_address + "launch/dev")
+        urllib2.urlopen(self.ecp_address + "launch/dev", "").read()

@@ -12,22 +12,22 @@ from utils import TestrunnerUtils, RokuUtils
 
 verbose_mode = False
 roku_ip = ""
-out_dir = "./"
+out_dir = ""
 out_name = "report"
 
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "i:d:n:hv", ["ip=", "outdir=" "help", "verbose"])
+        opts, args = getopt.getopt(argv, "hvi:d:n:", ["ip=", "outdir=", "outname="])
     except getopt.GetoptError:
         print_usage()
         sys.exit(2)
 
     for opt, arg in opts:
-        if opt in ("-h", "--help"):
+        if opt == "-h":
             print_usage()
             sys.exit()
-        elif opt in ("-v", "--verbose"):
+        elif opt == "-v":
             global verbose_mode
             verbose_mode = True
         elif opt in ("-i", "--ip"):
@@ -41,13 +41,17 @@ def main(argv):
             else:
                 global roku_ip
                 roku_ip = arg
-        elif opt in ("-o", "--outdir"):
+        elif opt in ("-d", "--outdir"):
             if path.isdir(arg):
                 global out_dir
                 out_dir = arg
             else:
                 TestrunnerUtils.pretty_print("ERROR: The output directory given is not valid!",
                                              TestrunnerUtils.TextDecorations.FAIL)
+                sys.exit(2)
+        elif opt in ("-n", "--outname"):
+            global out_name
+            out_name = arg
 
     if roku_ip == "":
         TestrunnerUtils.pretty_print("ERROR: Missing required arguments", TestrunnerUtils.TextDecorations.FAIL)
