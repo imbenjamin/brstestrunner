@@ -239,23 +239,24 @@ def start_testing():
 
 
 def print_welcome():
-    TestrunnerUtils.printout("""
+    TestrunnerUtils.pretty_print("""
     ***********************
     ***  brstestrunner  ***
     ***********************
-    """)
+    """, TestrunnerUtils.TextDecorations.HEADER, TestrunnerUtils.TextDecorations.BOLD)
 
     verbose_print("Verbose Mode is ON"+os.linesep, TestrunnerUtils.TextDecorations.WARNING)
 
 
 def print_usage():
-    TestrunnerUtils.printout("""usage: """ + sys.argv[0] + """ --ip i [--outdir d] [--outname n] [--verbose]
-    --ip i  IP address of the Roku device to test with
-    --outdir d The directory to write the XML report to (Default is the current directory)
-    --outname n The file name to use for the XML report (Default is 'report', produces report.xml)
-    --verbose  Show more descriptive logging
+    TestrunnerUtils.printout("""usage: """ + sys.argv[0] + """ --ip i [--outdir d] [--outname n] [-v] [-h]
+    --ip -i       IP address of the Roku device to test with
+    --outdir -d   The directory to write the XML report to (Default is the current directory)
+    --outname -n  The file name to use for the XML report (Default is 'report', produces report.xml)
+    -v            Show more descriptive logging
+    -h            Show help / usage
 
-    Example: """ + sys.argv[0] + """ --ip 192.168.1.78 --verbose""")
+    Example: """ + sys.argv[0] + """ --ip 192.168.1.78 --outname testreport -v""")
 
 
 def verbose_print(string, colour="", decoration=""):
