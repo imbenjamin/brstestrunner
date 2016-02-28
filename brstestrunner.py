@@ -1,4 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
+""" brstestrunner.py: A Python testrunner for brstest that outputs a JUnit-compatible report.
+"""
 
 import getopt
 import os
