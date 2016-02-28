@@ -113,7 +113,7 @@ def start_testing():
     listening_to_output = True
     telnet_output = []
     end_of_tests_pattern = '.*Test suite complete.*'
-    start_time = time.clock()
+    start_time = time.time()
 
     while listening_to_output:
         try:
@@ -145,7 +145,7 @@ def start_testing():
                                          TestrunnerUtils.TextDecorations.FAIL)
             listening_to_output = False
 
-    end_time = time.clock()
+    end_time = time.time()
     time_taken = (round(end_time - start_time, 3))
     verbose_print("        Closing connection")
     s.shutdown(socket.SHUT_RDWR)
