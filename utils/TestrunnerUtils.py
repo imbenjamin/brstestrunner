@@ -6,7 +6,7 @@ import os
 import xml.etree.ElementTree as ElementTree
 
 
-def create_junit_xml(num_of_tests, num_of_passes, num_of_fails, num_of_errors, failure_dict, error_dict):
+def create_junit_xml(num_of_tests, num_of_passes, num_of_fails, num_of_errors, failure_dict, error_dict, time_taken):
     """Generate an ElementTree of a test report
 
     :param num_of_tests: Total number of tests
@@ -15,11 +15,12 @@ def create_junit_xml(num_of_tests, num_of_passes, num_of_fails, num_of_errors, f
     :param num_of_errors: Number of erroneous tests
     :param failure_dict: Dictionary of failing tests
     :param error_dict: Dictionary of erroneous tests
+    :param time_taken: Time taken to run tests, in seconds
     :return: ElementTree of the test report
     """
     # Create root element
     root = ElementTree.Element("testsuites", {"tests": str(num_of_tests), "failures": str(num_of_fails),
-                                              "errors": str(num_of_errors)})
+                                              "errors": str(num_of_errors), "time": str(time_taken)})
 
     # Create passing (fake) tests
     passing_suite = ElementTree.SubElement(root, "testsuite", {"name": "passing tests", "tests": str(num_of_passes)})

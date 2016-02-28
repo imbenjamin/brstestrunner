@@ -14,6 +14,7 @@ import time
 from utils import TestrunnerUtils, RokuUtils
 
 verbose_mode = False
+telnet_timeout = 30
 roku_ip = ""
 out_dir = ""
 out_name = "report"
@@ -84,19 +85,18 @@ def start_testing():
     verbose_print("    Going to Home")
     roku_utils.keypress("Home")
 
-    # Sleep 2 secs for device to settle
-    time.sleep(2)
+    # Wait for device to settle
+    time.sleep(1.5)
 
     # Launch dev channel
     verbose_print("    Launching dev channel app")
     roku_utils.launch_dev_channel()
 
     # Connect to telnet socket
-    verbose_print("    Connecting to the Telnet interface on the Roku host...")
+    verbose_print("    Reading test results from Telnet interface...")
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # TODO: Parameterise the Telnet timeout!
-    s.settimeout(30)
+    s.settimeout(telnet_timeout)
 
     # connect to remote host
     try:
@@ -107,13 +107,15 @@ def start_testing():
                                      TestrunnerUtils.TextDecorations.FAIL)
         sys.exit(1)
 
-    verbose_print("        Connected to remote host.")
-    verbose_print("    Reading Telnet output, please wait...")
+    verbose_print("        Connected to host")
+    verbose_print("        Reading Telnet output...")
 
-    receiving_output = True
-
+    listening_to_output = True
     telnet_output = []
-    while receiving_output:
+    end_of_tests_pattern = '.*Test suite complete.*'
+    start_time = time.clock()
+
+    while listening_to_output:
         try:
             # Receive data from the socket
             data = s.recv(4096)
@@ -125,18 +127,27 @@ def start_testing():
             else:
                 # Store the line
                 telnet_output.append(data.decode())
+                # Attempt to stop listening to output as soon as tests are complete
+                clean = TestrunnerUtils.clean_raw_telnet(telnet_output)
+                if len(clean) > 3 and not re.match(end_of_tests_pattern, clean[0]) and \
+                        (re.match(end_of_tests_pattern, clean[-2]) or
+                         re.match(end_of_tests_pattern, clean[-3])):
+                    verbose_print("        Detected tests have finished")
+                    listening_to_output = False
         except socket.timeout:
             # Socket has timed out, no more Telnet output is being received
-            verbose_print("    No more Telnet output to read.")
-            receiving_output = False
+            verbose_print("        No more Telnet output to read")
+            listening_to_output = False
         except Exception as err:
-            # Some other ConnectionError has occurred
+            # Some other error has occurred
             verbose_print("    Exception thrown: "+str(err))
             TestrunnerUtils.pretty_print("ERROR: There was a problem with the connection.",
                                          TestrunnerUtils.TextDecorations.FAIL)
-            receiving_output = False
+            listening_to_output = False
 
-    verbose_print("    Closing connection...")
+    end_time = time.clock()
+    time_taken = (round(end_time - start_time, 3))
+    verbose_print("        Closing connection")
     s.shutdown(socket.SHUT_RDWR)
     s.close()
 
@@ -179,7 +190,8 @@ def start_testing():
     if test_suite_pass:
         text_colour = TestrunnerUtils.TextDecorations.OK_GREEN
 
-    TestrunnerUtils.pretty_print("Tests ran: "+str(num_of_tests), TestrunnerUtils.TextDecorations.HEADER)
+    TestrunnerUtils.pretty_print("Ran "+str(num_of_tests)+" tests in "+str(time_taken)+" seconds",
+                                 TestrunnerUtils.TextDecorations.HEADER)
     TestrunnerUtils.pretty_print("    Tests passed: "+str(num_of_passes), text_colour)
     TestrunnerUtils.pretty_print("    Tests failed: "+str(num_of_fails), text_colour)
     TestrunnerUtils.pretty_print("    Test errors:  "+str(num_of_errors), text_colour)
@@ -226,7 +238,7 @@ def start_testing():
     # Publish XML report
     TestrunnerUtils.pretty_print("Publishing XML report...", TestrunnerUtils.TextDecorations.HEADER)
     tree = TestrunnerUtils.create_junit_xml(num_of_tests, num_of_passes, num_of_fails, num_of_errors,
-                                            failure_dict, error_dict)
+                                            failure_dict, error_dict, time_taken)
     try:
         output_file = path.join(path.abspath(out_dir), out_name + ".xml")
         verbose_print("    Writing to " + output_file)
