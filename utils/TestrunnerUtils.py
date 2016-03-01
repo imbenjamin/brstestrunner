@@ -60,13 +60,18 @@ def clean_raw_telnet(telnet_output):
     return split_str
 
 
-def pretty_print(string, colour="", decoration=""):
+def pretty_print(string, indentation_level=0, colour="", decoration=""):
     """Print pretty text to the console
     :param string: String to print
+    :param indentation_level: The number of indentation levels to apply
     :param colour: ANSI colour code to apply
     :param decoration: ANSI decoration code to apply
     """
     s = ""
+
+    for i in range(indentation_level):
+        s += "\t"
+
     if decoration != "":
         s += decoration
     if colour != "":

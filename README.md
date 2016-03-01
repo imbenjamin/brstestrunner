@@ -11,8 +11,7 @@ text is allowed. Eg: `print "*** Running unit tests! ***"`. Extra print statemen
 allowed.
 
 ### Usage
-`python brstestrunner.py --ip <device ip> [--outdir <output directory>] [--outname <output file name>] [-v]
-[-h]`
+`python brstestrunner.py --ip <device ip> [--output <output file>] [-v] [-h]`
 
 `-v = Verbose Mode` `-h = Help/Show usage`
 
