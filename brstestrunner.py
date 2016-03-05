@@ -20,7 +20,7 @@ output_file = "report.xml"
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "hvi:o:", ["ip=", "output="])
+        opts, args = getopt.getopt(argv, "hvi:o:t:", ["ip=", "output=", "timeout="])
     except getopt.GetoptError:
         print_usage()
         sys.exit(2)
@@ -29,9 +29,11 @@ def main(argv):
         if opt == "-h":
             print_usage()
             sys.exit()
+
         elif opt == "-v":
             global verbose_mode
             verbose_mode = True
+
         elif opt in ("-i", "--ip"):
             try:
                 socket.inet_aton(arg)
@@ -43,9 +45,20 @@ def main(argv):
             else:
                 global roku_ip
                 roku_ip = arg
+
         elif opt in ("-o", "--output"):
             global output_file
             output_file = arg
+
+        elif opt in ("-t", "--timeout"):
+            try:
+                global telnet_timeout
+                telnet_timeout = int(arg)
+            except ValueError as err:
+                verbose_print("Exception thrown: "+str(err), indentation_level=1)
+                TestrunnerUtils.pretty_print("ERROR: The timeout value given is not a valid number!",
+                                             colour=TestrunnerUtils.TextDecorations.FAIL)
+                sys.exit(2)
 
     if roku_ip == "":
         TestrunnerUtils.pretty_print("ERROR: Missing required arguments", colour=TestrunnerUtils.TextDecorations.FAIL)
@@ -265,10 +278,11 @@ def print_welcome():
 
 
 def print_usage():
-    TestrunnerUtils.printout("""usage: """ + sys.argv[0] + """ --ip i [--outdir d] [--outname n] [-v] [-h]
-    --ip -i       IP address of the Roku device to test with
-    --output -o   The file to write the XML report to (Default is '<current directory>/report.xml')
-    -v            Show more descriptive logging
+    TestrunnerUtils.printout("""usage: """ + sys.argv[0] + """ --ip i [--outdir d] [--outname n] [--timeout t] [-v] [-h]
+    --ip -i       IP address of the Roku device to test with (Required)
+    --output -o   The file to write the XML report to (Default is '<current directory>/report.xml') (Optional)
+    --timeout -t  Timeout value in seconds used when communicating to the Roku device (Default is 30) (Optional)
+    -v            Verbose Mode: Show more descriptive logging
     -h            Show help / usage
 
     Example: """ + sys.argv[0] + """ --ip 192.168.1.78 --output tests/testreport.xml -v""")

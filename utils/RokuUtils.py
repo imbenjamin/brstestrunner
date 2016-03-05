@@ -19,22 +19,33 @@ class RokuUtils:
         """Commands a key press
         :param key: A valid key name
         """
-        urllib2.urlopen(self.ecp_address + "keypress/" + key, "").read()
+        try:
+            urllib2.urlopen(self.ecp_address + "keypress/" + key, "").read()
+            return True
+        except urllib2.HTTPError:
+            return False
 
     def is_dev_installed(self):
         """Checks if there is a 'dev' channel installed on the Roku device
         :return: Boolean result
         """
         result = False
-        r = urllib2.urlopen(self.ecp_address + "query/apps").read()
-        xml_root = ElementTree.fromstring(r)
-        for app in xml_root.getiterator("app"):
-            if app.get("id") == "dev":
-                result = True
-                break
+        try:
+            r = urllib2.urlopen(self.ecp_address + "query/apps").read()
+            xml_root = ElementTree.fromstring(r)
+            for app in xml_root.getiterator("app"):
+                if app.get("id") == "dev":
+                    result = True
+                    break
+        except urllib2.HTTPError:
+            result = False
         return result
 
     def launch_dev_channel(self):
         """Commands that the 'dev' channel is launched
         """
-        urllib2.urlopen(self.ecp_address + "launch/dev", "").read()
+        try:
+            urllib2.urlopen(self.ecp_address + "launch/dev", "").read()
+            return True
+        except urllib2.HTTPError:
+            return False
